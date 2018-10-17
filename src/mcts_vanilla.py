@@ -20,6 +20,7 @@ def traverse_nodes(node, board, state, identity):
     """
     #Assuming the player goes first
     #node.untried_actions is the list of legal moves
+    #simply uses the formula and finds which node should be expanded on
     bestNode = None
     bestValue = -5
     for child in node.child_nodes:
@@ -42,6 +43,9 @@ def expand_leaf(node, board, state):
     Returns:    The added child node.
 
     """
+    #Once we have a node that needs to be expanded, this function looks at all the valid moves, checks to see if the valid move is
+    #yet in the child dict. If it's not it gets added into the child dict and then gets returned. This method should be called multiple times
+    #in think, one for each new node
     check = None
     for move in node.untried_actions:
         if move not in node.child_nodes
@@ -62,6 +66,8 @@ def rollout(board, state):
         state:  The state of the game.
 
     """
+    #basically while there are valid moves, the amount of iterations are less than 1000, and the games hasn't ended, the loop
+    #will keep looking for a random legal move and play it
     i = 0
     while i < 1000 and board.legal_actions(state) != [] and !(board.is_ended(state)):
         board.next_state(state, random.choice(board.legal_actions))
@@ -76,6 +82,8 @@ def backpropagate(node, won):
         won:    An indicator of whether the bot won or lost the game.
 
     """
+    #once a simulation is complete the result is added to all the nodes that led to that point as well as incrementing the number of visits 
+    #for each.
     parent = node
     while(parent != None):
         node.visits += 1
@@ -93,6 +101,10 @@ def think(board, state):
     Returns:    The action to be taken.
 
     """
+    #this is where the real shit happens and we need to call all those funcitons, should be relatively simple, just need to make a loop
+    #which goes to either when the game ends, or there are no more valid moves. With each iteration of the loop we must apply the functions
+    #in order. Remember that rollout must be called multiple times for each child node of the node that is to be expanded upon i.e. on the
+    #node that was chosen by expand_leaf().
     identity_of_bot = board.current_player(state)
     root_node = MCTSNode(parent=None, parent_action=None, action_list=board.legal_actions(state))
 
