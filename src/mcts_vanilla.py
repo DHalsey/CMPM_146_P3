@@ -18,7 +18,16 @@ def traverse_nodes(node, board, state, identity):
     Returns:        A node from which the next stage of the search can proceed.
 
     """
-    pass
+    #Assuming the player goes first
+    #node.untried_actions is the list of legal moves
+    bestNode = None
+    bestValue = -5
+    for child in node.child_nodes:
+        currentValue = (child.wins/child.visits) + explore_faction*sqrt(log1p(node.visits)/child.visits)
+        if currentValue > bestValue:
+            bestValue = currentValue
+            bestNode = child
+    return bestNode
     # Hint: return leaf_node
 
 
@@ -33,7 +42,15 @@ def expand_leaf(node, board, state):
     Returns:    The added child node.
 
     """
-    pass
+    check = None
+    for move in node.untried_actions:
+        if move not in node.child_nodes
+            check = move
+    if check != None:
+        node.untried_actions.remove(move)
+    new_node = MCTSNode(parent = node, parent_action = check, action_list = board.legal_moves(state))
+    node.child_nodes[check] = new_node
+    return new_node
     # Hint: return new_node
 
 
@@ -45,7 +62,10 @@ def rollout(board, state):
         state:  The state of the game.
 
     """
-    pass
+    i = 0
+    while i < 1000 and board.legal_actions(state) != [] and !(board.is_ended(state)):
+        board.next_state(state, random.choice(board.legal_actions))
+        i+= 1
 
 
 def backpropagate(node, won):
@@ -56,7 +76,11 @@ def backpropagate(node, won):
         won:    An indicator of whether the bot won or lost the game.
 
     """
-    pass
+    parent = node
+    while(parent != None):
+        node.visits += 1
+        node.wins += won
+        parent = node.parent
 
 
 def think(board, state):
