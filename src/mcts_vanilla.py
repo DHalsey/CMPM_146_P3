@@ -48,7 +48,7 @@ def expand_leaf(node, board, state):
     #in think, one for each new node
     check = None
     for move in node.untried_actions:
-        if move not in node.child_nodes
+        if move not in node.child_nodes.keys()
             check = move
     if check != None:
         node.untried_actions.remove(move)
@@ -69,7 +69,7 @@ def rollout(board, state):
     #basically while there are valid moves, the amount of iterations are less than 1000, and the games hasn't ended, the loop
     #will keep looking for a random legal move and play it
     i = 0
-    while i < 1000 and board.legal_actions(state) != [] and !(board.is_ended(state)):
+    while i < num_nodes and board.legal_actions(state) != [] and !(board.is_ended(state)):
         board.next_state(state, random.choice(board.legal_actions))
         i+= 1
 
@@ -116,7 +116,24 @@ def think(board, state):
         node = root_node
 
         # Do MCTS - This is all you!
+        #This should select the node we want to expand
+        node = traverse_nodes(node, sampled_game, identity_of_bot)
+        #this expands that leaf node into some child nodes to simulate
+        node = expand_leaf(node, board, sampled_game)
+        #We then simulate the node
+        rollout(board, sampled_game)
+        #get the value for the win and push it back up the tree
+        backpropagate(node, win_values(board, sampled_game)[identity_of_bot])
 
+        #This should loop through all the nodes in order to find the path with the highets outcome
+        bestScore = -5
+        bestMove = None
+        #should look at all the children nodes and see which one yeilds the best score.
+        for(n in root_node.child_nodes):
+            score = n.wins/n.visits
+            if(score > best):
+                bestMove = n.parent_action
+                bestScore = score
     # Return an action, typically the most frequently used action (from the root) or the action with the best
     # estimated win rate.
-    return None
+    return bestMove
