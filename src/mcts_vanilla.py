@@ -20,16 +20,20 @@ def traverse_nodes(node, board, state, identity):
     #Assuming the player goes first
     #node.untried_actions is the list of legal moves
     #simply uses the formula and finds which node should be expanded on
+    #if not node.child_nodes:
+    #   node.visits +=1
+    #    return node
     bestNode = None
-    bestValue = -1
+    bestValue = None
     for child in node.child_nodes:
         child = node.child_nodes[child]
         #print("Child Wins: ", child.wins) #wins
-        currentValue = (child.wins/child.visits) + explore_faction*sqrt(log1p(node.visits)/child.visits) #formula for value
-        if currentValue > bestValue:
+        currentValue = (child.wins/child.visits) + explore_faction*(sqrt(log1p(node.visits)/child.visits)) #formula for value
+        if bestValue == None or currentValue > bestValue:
             bestValue = currentValue
             bestNode = child
             #print("child bestValue updated")
+        state = board.next_state(state, child.parent_action)
     if bestNode == None or len(node.untried_actions)>0: #if we did not find any children or we have reached a node with an untried action(because we have reached a leaf)
         #print("Node wins in: ", node.wins)
         return node #return the leaf node that we will expand upon
@@ -100,12 +104,21 @@ def backpropagate(node, won):
     """
     while(node.parent != None):
         node.visits += 1
-        node.wins += won
+        if(won == 1):
+            node.wins += 1
         node = node.parent
 
     node.visits += 1
-    node.wins += won
-    return
+    if(won == 1):
+        node.wins += 1
+    
+def getCurrentState(node, state, board):
+    actions=[]
+    while(node.parent_action != None):
+        actions.insert(0, node.parent_action)
+        node = node.parent
+    for action in actions:
+        state = board.next_state(state, action)
 
 def think(board, state):
     """ Performs MCTS by sampling games and calling the appropriate functions to construct the game tree.
@@ -134,7 +147,7 @@ def think(board, state):
         # Start at root
         node = root_node
         node = traverse_nodes(node, board, sampled_game, identity_of_bot) #updates node to be the leaf node with the best perceived chance of winning (the node to expand)
-        #print("Node wins:", node.wins)
+        #sampled_game = getCurrentState(node, sampled_game, board)#print("Node wins:", node.wins)
         new_node = expand_leaf(node,board,sampled_game) #adds a random new leaf from possible moves
         sampled_game = board.next_state(sampled_game, new_node.parent_action) #updates the copied state to include the move explored by expand_leaf
         #print(board.display(sampled_game,new_node.parent_action)) #prints the action created by expand_leaf
@@ -157,5 +170,5 @@ def think(board, state):
     
     # Return an action, typically the most frequently used action (from the root) or the action with the best
     # estimated win rate.
-    print("leaving mcts_vanilla.think()") #debug
+    #print("leaving mcts_vanilla.think()") #debug
     return bestMove
