@@ -1,11 +1,12 @@
 
 from mcts_node import MCTSNode
-from math import sqrt, log
+from math import sqrt, log, log1p
 from random import choice
 
 num_nodes = 1000 #the depth of our MCTS.  (num_node iterations of MCTS)
 explore_faction = 2.
 
+#for some reason we are getting a nonType return as soon as we branch larger than the starting node's size
 def traverse_nodes(node, board, state, identity):
     """ Traverses the tree until the end criterion are met.
     Args:
@@ -22,15 +23,20 @@ def traverse_nodes(node, board, state, identity):
     bestNode = None
     bestValue = -1
     for child in node.child_nodes:
+        child = node.child_nodes[child]
+        #print("Child Wins: ", child.wins) #wins
         currentValue = (child.wins/child.visits) + explore_faction*sqrt(log1p(node.visits)/child.visits) #formula for value
         if currentValue > bestValue:
             bestValue = currentValue
             bestNode = child
-            print("child bestValue updated")
-    if bestNode == None: #if we did not find any children (because we have reached a leaf)
-        return node #return the leaf node
-    traverse_nodes(bestNode,board,state,identity) #recursively traverse until we reach the best leaf node   
+            #print("child bestValue updated")
+    if bestNode == None or len(node.untried_actions)>0: #if we did not find any children or we have reached a node with an untried action(because we have reached a leaf)
+        #print("Node wins in: ", node.wins)
+        return node #return the leaf node that we will expand upon
+    return traverse_nodes(bestNode,board,state,identity) #recursively traverse until we reach the best leaf node
+
     # Hint: return leaf_node
+
 
 
 #expands 1 leaf at a time from node
@@ -53,7 +59,6 @@ def expand_leaf(node, board, state):
     new_node = None
     if node.untried_actions != []:
         move = choice(node.untried_actions) #get a random unexplored node
-        #print(move)
         new_node = MCTSNode(parent = node, parent_action = move, action_list = board.legal_actions(board.next_state(state,move)))
 
         #moves the untried action to the child node since we have now tried it
@@ -79,18 +84,11 @@ def rollout(board, state):
     while not board.is_ended(state): #while the game isnt over
         move = choice(board.legal_actions(state)) #choose a random move from legal actions
         state = board.next_state(state, move)
-        print(board.display(state,move)) #debug to show the progress
+        #print(board.display(state,move)) #debug to show the progress
 
     
     winners = board.points_values(state)
     return state #returns the state of the finished board
-    #this is gonna be unneccesary
-    if winners[1] == 1: #returns 1 if player 1 won
-        return 1
-    elif winners[1] == -1:
-        return 2 #returns 2 if player 2 won
-    else:
-        return 0 #returns 0 if it was a tie
 
 def backpropagate(node, won):
     """ Navigates the tree from a leaf node to the root, updating the win and visit count of each node along the path.
@@ -100,18 +98,13 @@ def backpropagate(node, won):
         won:    An indicator of whether the bot won or lost the game.
 
     """
-    #once a simulation is complete the result is added to all the nodes that led to that point as well as incrementing the number of visits 
-    #for each.
-    parent = node
-    numOfLoops = 0 #debug
-    while(parent.parent_action != None): #changed to parent.parent_action from parent since parent was infinte looping for some reason
+    while(node.parent != None):
         node.visits += 1
         node.wins += won
-        parent = node.parent
-        print(parent.parent_action)
-        numOfLoops += 1 #debug
-    print("Num of loops in back propagate: ",numOfLoops) #debug
-    print("Num of node visits in back propagate: ",node.visits) #debug
+        node = node.parent
+
+    node.visits += 1
+    node.wins += won
     return
 
 def think(board, state):
@@ -133,15 +126,15 @@ def think(board, state):
     #This should loop through all the nodes in order to find the path with the highets outcome
     bestScore = -5
     bestMove = None
-    #for step in range(num_nodes):
-    for i in range(1,2): #temp range for debugging. trying to get 1 successful iteration first   
+    for step in range(num_nodes):
+    #for i in range(1,1000): #temp range for debugging. trying to get 1 successful iteration first   
         # Copy the game for sampling a playthrough (before extending the tree)
         sampled_game = state
 
         # Start at root
         node = root_node
         node = traverse_nodes(node, board, sampled_game, identity_of_bot) #updates node to be the leaf node with the best perceived chance of winning (the node to expand)
-
+        #print("Node wins:", node.wins)
         new_node = expand_leaf(node,board,sampled_game) #adds a random new leaf from possible moves
         sampled_game = board.next_state(sampled_game, new_node.parent_action) #updates the copied state to include the move explored by expand_leaf
         #print(board.display(sampled_game,new_node.parent_action)) #prints the action created by expand_leaf
@@ -151,16 +144,17 @@ def think(board, state):
         #get the value for the win and push it back up the tree
         wonDict = board.points_values(state_finished)
         backpropagate(new_node, wonDict[identity_of_bot])
-        print("Num of node visits at root:" ,node.visits) #debug. this should be 1 right now, but is comng up as 0
+        #print("Num of node visits at root:" ,root_node.visits) #debug. this should be 1 right now, but is comng up as 0
 
     #should look at all the children nodes and see which one yeilds the best score.
-    """
+
     for n in root_node.child_nodes:
-        score = n.wins/n.visits
-        if(score > best):
-            bestMove = n.parent_action
+        child = root_node.child_nodes[n]
+        score = child.wins/child.visits
+        if(score > bestScore):
+            bestMove = child.parent_action
             bestScore = score
-    """
+    
     # Return an action, typically the most frequently used action (from the root) or the action with the best
     # estimated win rate.
     print("leaving mcts_vanilla.think()") #debug
