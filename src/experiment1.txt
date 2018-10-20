@@ -1,0 +1,32 @@
+experiment1.txt
+Dustin Halsey - dhalsey
+Joshua Clouse - jclouse
+
+For Experiment 1, we ran 4 different variations of MCTS. Listed below are the results of these experiments
+
+MCTS 500 nodes vs MCTS 1000 nodes
+Runs: 100
+500 node winrate:
+1000 node winrate:
+Tie Rate:
+
+MCTS 100 nodes vs MCTS 1000 nodes
+Runs: 100
+100 node winrate: 26
+1000 node winrate: 64
+Tie Rate: 10
+
+MCTS 10 nodes vs MCTS 1000 nodes
+Runs: 100
+10 node winrate: 12
+1000 node winrate: 75
+Tie Rate: 13
+
+MCTS 1 nodes vs MCTS 1000 nodes
+Runs: 100
+1 node winrate: 4
+1000 node winrate: 94
+Tie Rate: 2
+
+
+Through this process, we found a clear trend between winrate and number of nodes, as we decreased the nodes on one of the bots, its intelligence began dropping as it was forced to terminate sooner and could not build up as detailed of a MCTS.  as the number of nodes approaches 1, the bot gets closer and closer to random moves.

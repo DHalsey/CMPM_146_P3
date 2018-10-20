@@ -1,0 +1,17 @@
+experiment2.txt
+Dustin Halsey - dhalsey
+Joshua Clouse - jclouse
+
+For our modified MCTS, we chose to run multiple simulations during rollout instead of just 1.  From each rollout result, we accumulate the win values of -1,0, or 1 depending on who won.  After the simulations finish, we normalize our winrate by dividing our wins by the number of iterations to end up with a number between -1,1. By doing this, we achieved a better assumption about how good this randomly selected node is.  This keeps the number of nodes to be a consistent 1000, however the runtime increases considerably as the numebr of simulations increases.  By allowing for more time to process, we found a clear increase in winrate as shown below.
+
+For our submitted implementation, rollout will simulate 5 times and average the winrate from that.
+
+
+Modified MCTS vs Vanilla MCTS
+Iterations: 100
+Modified MCTS winrate: 87
+Vanilla MCTS winrate: 5
+Tie Rate: 8
+
+
+With an 87% winrate over Vanilla MCTS, our improved rollout shows a clear improvement on winrate. Additionally, we found that games tended to end with less turns than with just vanilla since our modified MCTS would make better moves and get closer to winning sooner.
