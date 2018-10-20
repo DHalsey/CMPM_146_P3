@@ -25,23 +25,6 @@ def traverse_nodes(node, board, state, identity):
     #   node.visits +=1
     #    return node
     bestNode = None
-<<<<<<< HEAD
-    bestValue = None
-    for child in node.child_nodes:
-        child = node.child_nodes[child]
-        #print("Child Wins: ", child.wins) #wins
-        currentValue = (child.wins/child.visits) + explore_faction*(sqrt(log1p(node.visits)/child.visits)) #formula for value
-        if bestValue == None or currentValue > bestValue:
-            bestValue = currentValue
-            bestNode = child
-            #print("child bestValue updated")
-        state = board.next_state(state, child.parent_action)
-    if bestNode == None or len(node.untried_actions)>0: #if we did not find any children or we have reached a node with an untried action(because we have reached a leaf)
-        #print("Node wins in: ", node.wins)
-        return node #return the leaf node that we will expand upon
-    return traverse_nodes(bestNode,board,state,identity) #recursively traverse until we reach the best leaf node
-
-=======
     bestValue = -1000
     stateMove = None
 
@@ -59,7 +42,6 @@ def traverse_nodes(node, board, state, identity):
             bestValue = -1000
             stateMove = None
     return node #return the leaf node that we will expand upon   
->>>>>>> f4948de6d9ae95308b849dd2f499595207d1bc2d
     # Hint: return leaf_node
 
 
@@ -171,13 +153,9 @@ def think(board, state):
 
         #print("traverse_nodes()")
         node = traverse_nodes(node, board, sampled_game, identity_of_bot) #updates node to be the leaf node with the best perceived chance of winning (the node to expand)
-<<<<<<< HEAD
-        #sampled_game = getCurrentState(node, sampled_game, board)#print("Node wins:", node.wins)
-=======
         sampled_game = getCurrentState(node, board, state + tuple())
 
         #print("expand_leaf()")
->>>>>>> f4948de6d9ae95308b849dd2f499595207d1bc2d
         new_node = expand_leaf(node,board,sampled_game) #adds a random new leaf from possible moves
         sampled_game = getCurrentState(new_node, board, state + tuple())
         #print(board.display(sampled_game,new_node.parent_action)) #prints the action created by expand_leaf
@@ -196,9 +174,5 @@ def think(board, state):
     
     # Return an action, typically the most frequently used action (from the root) or the action with the best
     # estimated win rate.
-<<<<<<< HEAD
-    #print("leaving mcts_vanilla.think()") #debug
-=======
     # print("leaving mcts_vanilla.think()") #debug
->>>>>>> f4948de6d9ae95308b849dd2f499595207d1bc2d
     return bestMove
