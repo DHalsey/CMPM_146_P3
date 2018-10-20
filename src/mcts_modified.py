@@ -4,7 +4,7 @@ from copy import deepcopy
 from math import sqrt, log, log1p
 from random import choice
 
-num_nodes = 100 #the depth of our MCTS.  (num_node iterations of MCTS)
+num_nodes = 1000 #the depth of our MCTS.  (num_node iterations of MCTS)
 explore_faction = 2.
 
 #for some reason we are getting a nonType return as soon as we branch larger than the starting node's size
@@ -73,7 +73,7 @@ def expand_leaf(node, board, state):
     # Hint: return new_node
 
 
-def rollout(board, state):
+def rollout(board, state, identity):
     state2 = state + tuple()
     """ Given the state of the game, the rollout plays out the remainder randomly.
 
@@ -84,11 +84,19 @@ def rollout(board, state):
     """
     #basically while there are valid moves, the amount of iterations are less than 1000, and the games hasn't ended, the loop
     #will keep looking for a random legal move and play it
-    
-    while not board.is_ended(state2): #while the game isnt over
-        move = choice(board.legal_actions(state2)) #choose a random move from legal actions
-        state2 = board.next_state(state2, move)
-    return state2 #returns the state of the finished board
+    won = 0
+    iterations = 5
+    for i in range(0,iterations):
+        while not board.is_ended(state2): #while the game isnt over
+            move = choice(board.legal_actions(state2)) #choose a random move from legal actions
+            state2 = board.next_state(state2, move)     
+        temp = board.points_values(state2)[identity] #get if the bot won (-1 = lost, 0 = tied, 1 = won)
+        won += temp
+        state2 = state + tuple()#reset the state for another loop
+        #print(i)
+    won /= iterations #normalize the won percentage to [-1,1]
+    return won
+    #return state2 #returns the state of the finished board
 
 def backpropagate(node, won):
     """ Navigates the tree from a leaf node to the root, updating the win and visit count of each node along the path.
@@ -134,8 +142,8 @@ def think(board, state):
     #This should loop through all the nodes in order to find the path with the highets outcome
     bestScore = -5
     bestMove = None
-    for step in range(num_nodes):
-    #for i in range(1,1000): #temp range for debugging. trying to get 1 successful iteration first   
+    #for step in range(num_nodes):
+    for i in range(0,1000): #temp range for debugging. trying to get 1 successful iteration first   
         # Copy the game for sampling a playthrough (before extending the tree)
         sampled_game = state + tuple()
         node = root_node
@@ -149,14 +157,15 @@ def think(board, state):
         sampled_game = getCurrentState(new_node, board, state + tuple())
         #print(board.display(sampled_game,new_node.parent_action)) #prints the action created by expand_leaf
         #print("rollout()")
-        state_finished = rollout(board, sampled_game)
+        won = rollout(board, sampled_game, identity_of_bot)
         #print("backpropagate()")
-        backpropagate(new_node, board.points_values(state_finished)[identity_of_bot])
+        backpropagate(new_node, won)
         if not board.points_values(sampled_game) == None: #if we've reached a state where the game is over
             #print("ENDED EARLY")
             break
         #should look at all the children nodes and see which one yeilds the best score.
         #print("End")
+    #print("\n")
     for n in root_node.child_nodes:
         child = root_node.child_nodes[n]
         score = child.wins/child.visits
