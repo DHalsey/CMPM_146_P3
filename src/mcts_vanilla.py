@@ -25,7 +25,7 @@ def traverse_nodes(node, board, state, identity):
     bestValue = -1000
     stateMove = None
 
-    while(len(node.untried_actions)<=0):    
+    while(len(node.untried_actions)<=0): #loop while we are at a node that doesnt have any untried actions   
         for child in node.child_nodes:
             childValue = node.child_nodes[child] #the child node
             currentValue = (childValue.wins/childValue.visits) + explore_faction*sqrt(log1p(node.visits)/childValue.visits) #formula for value
@@ -33,7 +33,7 @@ def traverse_nodes(node, board, state, identity):
                 bestValue = currentValue
                 bestNode = childValue
                 stateMove = child
-        if not bestNode == None: #if we founda  best node, update node
+        if not bestNode == None: #if we found a best node, update node
             node = bestNode
             bestNode = None
             bestValue = -1000
@@ -74,6 +74,7 @@ def expand_leaf(node, board, state):
 
 
 def rollout(board, state):
+    state2 = state + tuple()
     """ Given the state of the game, the rollout plays out the remainder randomly.
 
     Args:
@@ -84,10 +85,10 @@ def rollout(board, state):
     #basically while there are valid moves, the amount of iterations are less than 1000, and the games hasn't ended, the loop
     #will keep looking for a random legal move and play it
     
-    while not board.is_ended(state): #while the game isnt over
-        move = choice(board.legal_actions(state)) #choose a random move from legal actions
-        state = board.next_state(state, move)
-    return state #returns the state of the finished board
+    while not board.is_ended(state2): #while the game isnt over
+        move = choice(board.legal_actions(state2)) #choose a random move from legal actions
+        state2 = board.next_state(state2, move)
+    return state2 #returns the state of the finished board
 
 def backpropagate(node, won):
     """ Navigates the tree from a leaf node to the root, updating the win and visit count of each node along the path.
@@ -151,6 +152,9 @@ def think(board, state):
         state_finished = rollout(board, sampled_game)
         #print("backpropagate()")
         backpropagate(new_node, board.points_values(state_finished)[identity_of_bot])
+        if not board.points_values(sampled_game) == None: #if we've reached a state where the game is over
+            #print("ENDED EARLY")
+            break
         #should look at all the children nodes and see which one yeilds the best score.
         #print("End")
     for n in root_node.child_nodes:
